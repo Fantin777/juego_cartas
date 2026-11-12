@@ -1,0 +1,28 @@
+# =====================================================================
+#  .htaccess principal (Apache / WampServer)
+# =====================================================================
+DirectoryIndex index.php
+Options -Indexes
+
+# Archivos que nunca deben descargarse (.env, SQL, documentación, logs...)
+<FilesMatch "(^\.env|\.(sql|md|log|ini|bak|json)$)">
+    Require all denied
+</FilesMatch>
+
+# URLs lindas: /juego_gusti/api/ranking en lugar de /juego_gusti/index.php/api/ranking
+# Si mod_rewrite no está activo, el juego igual funciona con index.php/... en la URL.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    # Avisa a PHP que las URLs lindas están disponibles
+    RewriteRule ^ - [E=APP_REWRITE:1]
+    # Los archivos de public/ (css, js, imágenes) se sirven directo
+    RewriteRule ^public/ - [L]
+    # Todo lo demás lo atiende index.php
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [QSA,L]
+</IfModule>
+
+# Permite que PHP lea la cabecera X-CSRF-Token en todas las versiones de Apache
+<IfModule mod_setenvif.c>
+    SetEnvIf X-CSRF-Token "(.+)" HTTP_X_CSRF_TOKEN=$1
+</IfModule>
