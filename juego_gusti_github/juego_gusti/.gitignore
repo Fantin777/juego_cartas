@@ -1,0 +1,13 @@
+# Datos privados de cada computadora (contraseña de MySQL, puerto, etc.)
+.env
+
+# Archivos del sistema y del editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Registros de errores
+*.log
+error_log
