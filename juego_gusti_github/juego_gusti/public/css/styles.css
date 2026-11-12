@@ -1,0 +1,763 @@
+/* ============================
+   RESETEO Y CONFIGURACIÓN BASE
+   ============================ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Fondo y configuración general del body */
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #1e5128 0%, #2d6a4f 100%);
+    background-image: url('../img/fondos/fondoverde.jpg'); /* Fondo principal del menú */
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+}
+
+/* Fondo alternativo cuando se está jugando */
+body.jugando {
+    background-image: url('../img/fondos/fondomesa.jpg'); /* Fondo de mesa */
+    image-rendering: auto;
+    image-rendering: high-quality;
+    -ms-interpolation-mode: bicubic;
+}
+
+/* Contenedor principal del juego */
+.game-container {
+    width: 100%;
+    max-width: 1000px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin: 0 auto;
+}
+
+/* ============================
+   MENÚ PRINCIPAL
+   ============================ */
+.menu-principal {
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 20px;
+    padding: 40px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    min-width: 400px;
+}
+
+.titulo-menu {
+    color: #fff200;
+    font-size: 2.5em;
+    margin-bottom: 30px;
+    text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
+}
+
+/* Botones del menú principal */
+.menu-botones {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.btn-menu {
+    background: linear-gradient(135deg, #2f53f3 0%, #0bf578 100%);
+    color: black;
+    padding: 18px 36px;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.2em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.btn-menu:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(211, 204, 204, 0.4);
+}
+
+/* Botón especial de salir */
+.btn-menu.btn-salir {
+    background: linear-gradient(135deg, #dec84a 0%, #dc2626 100%);
+    color: white;
+}
+
+/* ============================
+   PANELES DE INFORMACIÓN
+   ============================ */
+.panel-info {
+    background: rgba(0, 0, 0, 0.9);
+    border-radius: 20px;
+    padding: 30px;
+    color: white;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.panel-info h2 {
+    color: #09eff7;
+    margin-bottom: 20px;
+    font-size: 2em;
+}
+
+.panel-info h3 {
+    color: #4ade80;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+.panel-info ul {
+    list-style-position: inside;
+    margin-left: 10px;
+}
+
+.panel-info p {
+    margin-bottom: 10px;
+}
+
+/* Contenedor general de contenido dentro de paneles */
+.contenido-panel {
+    margin: 20px 0;
+}
+
+/* Campos de configuración (nombre, velocidad, etc.) */
+.config-item {
+    margin-bottom: 20px;
+}
+
+.config-item label {
+    display: block;
+    margin-bottom: 5px;
+    color: #24e2fb;
+}
+
+.config-item input,
+.config-item select {
+    width: 100%;
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #4ade80;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    font-size: 1em;
+}
+
+/* Botones dentro de paneles (guardar / volver) */
+.btn-volver,
+.btn-guardar {
+    background: #3b82f6;
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 20px;
+    margin-right: 10px;
+}
+
+.btn-guardar {
+    background: #31e9bb;
+}
+
+/* Créditos */
+.credito-titulo {
+    font-size: 1.5em;
+    color: #fbbf24;
+    margin-bottom: 10px;
+}
+
+/* ============================
+   MENÚ DE PAUSA
+   ============================ */
+.menu-pausa {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.contenido-pausa {
+    background: rgba(0, 0, 0, 0.9);
+    border-radius: 20px;
+    padding: 40px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.contenido-pausa h2 {
+    color: #3ee58c;
+    margin-bottom: 30px;
+    font-size: 2em;
+}
+
+/* Botón del menú dentro del juego */
+.btn-menu-juego {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.2em;
+}
+
+/* ============================
+   MARCADOR Y PUNTAJE
+   ============================ */
+h1 {
+    color: white;
+    font-size: 1.8em;
+    text-align: center;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    margin: 5px 0;
+}
+
+.marcador {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0,0,0,0.7);
+    border-radius: 10px;
+    padding: 12px 20px;
+    color: white;
+    display: flex;
+    gap: 25px;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+    border: 2px solid rgba(255,215,0,0.3);
+}
+
+.jugador-info {
+    text-align: center;
+    position: relative;
+}
+
+.jugador-info .nombre {
+    font-size: 0.9em;
+    margin-bottom: 5px;
+    opacity: 0.9;
+    font-weight: bold;
+}
+
+.jugador-info .puntos {
+    font-size: 2.5em;
+    font-weight: bold;
+    color: #ffd700;
+    line-height: 1;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+}
+
+.jugador-info .manos-ganadas {
+    font-size: 0.65em;
+    margin-top: 5px;
+    opacity: 0.7;
+}
+
+.jugador-info .mano-badge {
+    font-size: 0.7em;
+    color: #4ade80;
+    font-weight: bold;
+    margin-top: 3px;
+}
+
+.vs {
+    font-size: 1em;
+    opacity: 0.8;
+    font-weight: bold;
+}
+
+/* ============================
+   CARTAS Y MESA DE JUEGO
+   ============================ */
+
+/* Contenedor de las cartas (jugador y CPU) */
+.cartas-container {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    min-height: 160px;
+}
+
+/* Carta genérica */
+.carta {
+    width: 100px;
+    height: 150px;
+    border-radius: 10px;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+/* Estado de arrastre */
+.carta.draggable {
+    cursor: grab;
+}
+
+.carta.draggable:active {
+    cursor: grabbing;
+}
+
+.carta.draggable:hover {
+    transform: scale(1.1) translateY(-10px);
+    box-shadow: 0 8px 16px rgba(255,215,0,0.5);
+}
+
+.carta.dragging {
+    opacity: 0.5;
+    transform: scale(0.95);
+}
+
+/* Carta oculta (dorso del enemigo) */
+.carta-oculta {
+    background: linear-gradient(135deg, #8721cb 0%, #153bb9 50%, #1bedd1 100%);
+    border: 3px solid #ca8a04;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5em;
+}
+
+/* Área central (mesa) */
+.mesa {
+    background: rgba(0,0,0,0.2);
+    border-radius: 20px;
+    padding: 30px;
+    min-width: 400px;
+    text-align: center;
+    color: white;
+    transition: all 0.3s;
+}
+
+/* Efecto visual cuando se puede soltar una carta */
+.mesa.drop-zone {
+    background: rgba(34, 197, 94, 0.4);
+    border: 4px dashed #fbbf24;
+    transform: scale(1.05);
+}
+
+/* Texto principal de la mesa */
+.mesa-mensaje {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-bottom: 10px;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Información adicional en la mesa */
+.mesa-info {
+    font-size: 0.9em;
+    margin-top: 10px;
+}
+
+.rondas-info {
+    font-size: 0.8em;
+    margin-top: 5px;
+}
+
+/* Etiquetas de estados (Truco / Envido) */
+.truco-badge,
+.envido-badge {
+    display: inline-block;
+    padding: 5px 15px;
+    border-radius: 10px;
+    margin-top: 10px;
+    font-weight: bold;
+    animation: pulse 2s infinite;
+}
+
+.truco-badge {
+    background: #fbbf24;
+    color: #78350f;
+}
+
+.envido-badge {
+    background: #4ade80;
+    color: #14532d;
+}
+
+/* Animación de parpadeo para botones y etiquetas */
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* ============================
+   BOTONES Y CONTROLES DEL JUEGO
+   ============================ */
+.controles {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+/* Botones genéricos */
+button {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 10px;
+    font-weight: bold;
+    font-size: 1em;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Colores específicos para cada tipo de botón */
+.btn-nueva-mano { background: #fbbf24; color: black; }
+.btn-reiniciar { background: #3b82f6; color: white; }
+.btn-truco { background: #ef4444; color: white; }
+.btn-mazo { background: #4b5563; color: white; border: 2px solid #6b7280; }
+.btn-envido { background: #3b82f6; color: white; }
+.btn-real-envido { background: #8b5cf6; color: white; }
+.btn-falta-envido { background: #f97316; color: white; }
+
+/* Botones de respuesta (quiero / no quiero) */
+.btn-quiero {
+    background: #22c55e;
+    color: white;
+    animation: pulse 1.5s infinite;
+    font-size: 1.2em;
+    padding: 15px 35px;
+}
+
+.btn-no-quiero {
+    background: #ef4444;
+    color: white;
+    animation: pulse 1.5s infinite;
+    font-size: 1.2em;
+    padding: 15px 35px;
+}
+
+/* ============================
+   DISTRIBUCIÓN DE LA MESA
+   ============================ */
+.mesa-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+/* Cartas jugadas en la mesa */
+.cartas-jugadas {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+}
+
+.cartas-jugadas-label {
+    color: white;
+    font-size: 0.9em;
+    margin-right: 10px;
+}
+
+/* Filas de cartas del jugador y CPU */
+.fila-cartas {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Texto de instrucciones al jugador */
+.instruccion {
+    color: white;
+    text-align: center;
+    font-size: 0.9em;
+    margin: 10px 0;
+    animation: pulse 2s infinite;
+}
+
+/* ============================
+   IMÁGENES DE CARTAS PERSONALIZADAS
+   ============================ */
+.carta-imagen {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+/* =====================================================================
+   NUEVO: CUENTAS, RANKING Y FIN DE PARTIDO
+   (mismos colores y formas que el menú original)
+   ===================================================================== */
+
+/* --- Login / Registro --- */
+.auth-caja {
+    width: 100%;
+    max-width: 460px;
+    min-width: 0;
+}
+
+.auth-subtitulo {
+    color: #09eff7;
+    margin-bottom: 20px;
+    font-size: 1.6em;
+}
+
+.form-auth {
+    text-align: left;
+    color: white;
+}
+
+.form-auth .menu-botones {
+    margin-top: 10px;
+}
+
+.auth-ayuda {
+    display: block;
+    margin-top: 4px;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.8em;
+}
+
+.auth-error,
+.auth-exito {
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 18px;
+    text-align: left;
+    font-weight: bold;
+}
+
+.auth-error {
+    background: rgba(220, 38, 38, 0.25);
+    border: 2px solid #dc2626;
+    color: #fecaca;
+}
+
+.auth-error ul {
+    list-style-position: inside;
+}
+
+.auth-exito {
+    background: rgba(11, 245, 120, 0.2);
+    border: 2px solid #0bf578;
+    color: #bbf7d0;
+}
+
+.auth-link {
+    margin-top: 22px;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.auth-link a {
+    color: #fff200;
+    font-weight: bold;
+}
+
+/* --- Barra del usuario en el menú --- */
+.usuario-barra {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    color: white;
+    background: rgba(255, 255, 255, 0.08);
+    border: 2px solid rgba(255, 215, 0, 0.3);
+    border-radius: 12px;
+    padding: 10px 16px;
+    margin: -10px 0 22px;
+    font-size: 1.05em;
+}
+
+.usuario-barra strong {
+    color: #ffd700;
+}
+
+.form-logout {
+    display: flex;
+    flex-direction: column;
+}
+
+.btn-menu.btn-ranking {
+    background: linear-gradient(135deg, #fbbf24 0%, #f97316 100%);
+}
+
+.btn-menu.btn-continuar {
+    background: linear-gradient(135deg, #0bf578 0%, #22d3ee 100%);
+}
+
+/* --- Panel de ranking --- */
+#panel-ranking {
+    width: 100%;
+}
+
+.ranking-yo {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.ranking-yo-dato {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(74, 222, 128, 0.5);
+    border-radius: 10px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.ranking-yo-dato span {
+    font-size: 0.8em;
+    color: #24e2fb;
+}
+
+.ranking-yo-dato strong {
+    color: #ffd700;
+    font-size: 1.15em;
+    overflow-wrap: anywhere;
+}
+
+.tabla-ranking {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 1em;
+}
+
+.tabla-ranking th,
+.tabla-ranking td {
+    padding: 10px 8px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.tabla-ranking th {
+    color: #4ade80;
+    font-size: 0.85em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.tabla-ranking .num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.tabla-ranking td:last-child {
+    color: #ffd700;
+    font-weight: bold;
+}
+
+.tabla-ranking tbody tr:nth-child(-n+3) td:first-child {
+    font-weight: bold;
+}
+
+.tabla-ranking tr.ranking-vos td {
+    background: rgba(11, 245, 120, 0.15);
+}
+
+.ranking-vacio,
+.ranking-cargando {
+    text-align: center;
+    padding: 20px 10px;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.ranking-nota {
+    margin-top: 15px;
+    font-size: 0.85em;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* --- Fin de partido --- */
+.contenido-fin {
+    max-width: 480px;
+    width: calc(100% - 32px);
+}
+
+.contenido-fin h2 {
+    margin-bottom: 15px;
+}
+
+.fin-detalle {
+    color: white;
+    font-size: 1.2em;
+    margin-bottom: 10px;
+}
+
+.fin-puntos {
+    color: rgba(255, 255, 255, 0.75);
+    font-weight: bold;
+    margin-bottom: 25px;
+}
+
+.fin-puntos-gano {
+    color: #ffd700;
+    font-size: 1.15em;
+}
+
+.fin-botones {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* --- Avisos de error --- */
+.aviso {
+    position: fixed;
+    left: 50%;
+    bottom: 60px;
+    transform: translateX(-50%);
+    max-width: calc(100% - 32px);
+    background: rgba(220, 38, 38, 0.95);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-weight: bold;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+}
+
+@media (max-width: 480px) {
+    .menu-principal { min-width: 0; padding: 25px 16px; }
+    .ranking-yo { grid-template-columns: 1fr; }
+    .tabla-ranking th, .tabla-ranking td { padding: 8px 4px; font-size: 0.85em; }
+}

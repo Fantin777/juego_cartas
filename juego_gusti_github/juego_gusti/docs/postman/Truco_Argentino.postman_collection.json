@@ -1,0 +1,1269 @@
+{
+  "info": {
+    "_postman_id": "70163442-bb06-43e7-804f-4dfbe2462ebd",
+    "name": "Truco Argentino - API",
+    "description": "Colección para probar el backend del Truco Argentino.\n\n1. Editá la variable `baseUrl` si tu carpeta no es `juego_gusti` (pestaña Variables de la colección).\n2. Ejecutá **0 · Cuenta y sesión → Registrar** y después **Iniciar sesión**: el token CSRF se guarda solo en `{{csrf}}` y Postman guarda la cookie de sesión.\n3. Jugá con la carpeta **1 · Partida**. Abrí la Consola de Postman (abajo a la izquierda) para ver los mensajes del juego y el siguiente paso.\n\nGuía completa: docs/POSTMAN.md",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost/juego_gusti/api"
+    },
+    {
+      "key": "usuario",
+      "value": "postman_1"
+    },
+    {
+      "key": "password",
+      "value": "secreto123"
+    },
+    {
+      "key": "csrf",
+      "value": ""
+    },
+    {
+      "key": "cartaParaJugar",
+      "value": ""
+    },
+    {
+      "key": "siguientePaso",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "0 · Cuenta y sesión",
+      "item": [
+        {
+          "name": "Registrar cuenta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Código HTTP 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Responde JSON', () => pm.response.to.be.json);",
+                  "pm.test('ok = true', () => pm.expect(pm.response.json().ok).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "registro"
+              ]
+            },
+            "description": "Crea una cuenta. Usuario: 3 a 20 letras, números o _. Contraseña: 6 a 72 caracteres.\n\nRespuestas: 201 creada · 409 el usuario ya existe · 422 datos inválidos (lista en `errores`).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuario\": \"{{usuario}}\",\n  \"password\": \"{{password}}\",\n  \"confirmar\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Iniciar sesión",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Código HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Responde JSON', () => pm.response.to.be.json);",
+                  "pm.test('ok = true', () => pm.expect(pm.response.json().ok).to.eql(true));",
+                  "pm.collectionVariables.set('csrf', pm.response.json().csrf);",
+                  "console.log('Token CSRF guardado');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Inicia sesión. Postman guarda la cookie TRUCOSESSID y el script guarda el token en {{csrf}}.\n\nRespuestas: 200 · 401 usuario o contraseña incorrectos · 429 demasiados intentos (esperá 15 min).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuario\": \"{{usuario}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Ver sesión actual",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Código HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Responde JSON', () => pm.response.to.be.json);",
+                  "pm.test('ok = true', () => pm.expect(pm.response.json().ok).to.eql(true));",
+                  "pm.collectionVariables.set('csrf', pm.response.json().csrf);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/sesion",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "sesion"
+              ]
+            },
+            "description": "Devuelve quién está conectado, sus puntos, si tiene una partida en curso y el token CSRF (también lo guarda)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "1 · Partida",
+      "item": [
+        {
+          "name": "Crear partida nueva",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Código HTTP 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Responde JSON', () => pm.response.to.be.json);",
+                  "pm.test('ok = true', () => pm.expect(pm.response.json().ok).to.eql(true));",
+                  "// Guarda datos útiles para el próximo paso y muestra qué pasó en la Consola de Postman.",
+                  "const json = pm.response.json();",
+                  "if (json.eventos && json.eventos.length) {",
+                  "  json.eventos.forEach(ev => { if (ev.mensaje) console.log('🃏 ' + ev.mensaje); });",
+                  "  const est = json.eventos[json.eventos.length - 1].estado;",
+                  "  const mano = est.jugador.mano || [];",
+                  "  pm.collectionVariables.set('cartaParaJugar', mano.length ? mano[0].id : '');",
+                  "  let paso;",
+                  "  if (est.partidoTerminado) paso = 'Partido terminado: ' + (est.ganadorPartido === 'jugador' ? '¡ganaste!' : 'ganó Tata') + '. Creá otra partida.';",
+                  "  else if (est.envido.esperandoRespuesta && est.envido.quienCanto === 'tata') paso = 'Tata cantó envido → \"Responder envido\"';",
+                  "  else if (est.truco.esperandoRespuesta && est.truco.quienCanto === 'tata') paso = 'Tata cantó ' + est.truco.paraResponder.nombre + ' → \"Responder truco\"';",
+                  "  else if (!est.juegoIniciado) paso = 'La mano terminó → \"Repartir nueva mano\"';",
+                  "  else if (est.turno === 'jugador') paso = 'Tu turno → \"Jugar carta\" (se usará ' + pm.collectionVariables.get('cartaParaJugar') + ')';",
+                  "  else paso = 'Turno de Tata';",
+                  "  pm.collectionVariables.set('siguientePaso', paso);",
+                  "  console.log('👉 ' + paso + '   | Marcador: vos ' + est.jugador.puntos + ' - Tata ' + est.tata.puntos);",
+                  "}",
+                  "if (json.resultado) console.log('🏁 RESULTADO:', JSON.stringify(json.resultado));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrf}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/partidas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "partidas"
+              ]
+            },
+            "description": "Empieza un partido nuevo contra Tata y reparte la primera mano. Si había otro en curso queda como abandonado.\n\n`objetivo`: 15 o 30.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"objetivo\": 15,\n  \"nombreJugador\": \"Vos\",\n  \"nombreOponente\": \"Tata\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Ver partida en curso",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Código HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Responde JSON', () => pm.response.to.be.json);",
+                  "pm.test('ok = true', () => pm.expect(pm.response.json().ok).to.eql(true));",
+                  "// Guarda datos útiles para el próximo paso y muestra qué pasó en la Consola de Postman.",
+                  "const json = pm.response.json();",
+                  "if (json.eventos && json.eventos.length) {",
+                  "  json.eventos.forEach(ev => { if (ev.mensaje) console.log('🃏 ' + ev.mensaje); });",
+                  "  const est = json.eventos[json.eventos.length - 1].estado;",
+                  "  const mano = est.jugador.mano || [];",
+                  "  pm.collectionVariables.set('cartaParaJugar', mano.length ? mano[0].id : '');",
+                  "  let paso;",
+                  "  if (est.partidoTerminado) paso = 'Partido terminado: ' + (est.ganadorPartido === 'jugador' ? '¡ganaste!' : 'ganó Tata') + '. Creá otra partida.';",
+                  "  else if (est.envido.esperandoRespuesta && est.envido.quienCanto === 'tata') paso = 'Tata cantó envido → \"Responder envido\"';",
+                  "  else if (est.truco.esperandoRespuesta && est.truco.quienCanto === 'tata') paso = 'Tata cantó ' + est.truco.paraResponder.nombre + ' → \"Responder truco\"';",
+                  "  else if (!est.juegoIniciado) paso = 'La mano terminó → \"Repartir nueva mano\"';",
+                  "  else if (est.turno === 'jugador') paso = 'Tu turno → \"Jugar carta\" (se usará ' + pm.collectionVariables.get('cartaParaJugar') + ')';",
+                  "  else paso = 'Turno de Tata';",
+                  "  pm.collectionVariables.set('siguientePaso', paso);",
+                  "  console.log('👉 ' + paso + '   | Marcador: vos ' + est.jugador.puntos + ' - Tata ' + est.tata.puntos);",
+                  "}",
+                  "if (json.resultado) console.log('🏁 RESULTADO:', JSON.stringify(json.resultado));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/partidas/actual",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "partidas",
+                "actual"
+              ]
+            },
+            "description": "Estado de la partida en curso (no cambia nada). Si no hay, `partida` es null."
+          }
+        },
+        {
+          "name": "Jugar carta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Código HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Responde JSON', () => pm.response.to.be.json);",
+                  "pm.test('ok = true', () => pm.expect(pm.response.json().ok).to.eql(true));",
+                  "// Guarda datos útiles para el próximo paso y muestra qué pasó en la Consola de Postman.",
+                  "const json = pm.response.json();",
+                  "if (json.eventos && json.eventos.length) {",
+                  "  json.eventos.forEach(ev => { if (ev.mensaje) console.log('🃏 ' + ev.mensaje); });",
+                  "  const est = json.eventos[json.eventos.length - 1].estado;",
+                  "  const mano = est.jugador.mano || [];",
+                  "  pm.collectionVariables.set('cartaParaJugar', mano.length ? mano[0].id : '');",
+                  "  let paso;",
+                  "  if (est.partidoTerminado) paso = 'Partido terminado: ' + (est.ganadorPartido === 'jugador' ? '¡ganaste!' : 'ganó Tata') + '. Creá otra partida.';",
+                  "  else if (est.envido.esperandoRespuesta && est.envido.quienCanto === 'tata') paso = 'Tata cantó envido → \"Responder envido\"';",
+                  "  else if (est.truco.esperandoRespuesta && est.truco.quienCanto === 'tata') paso = 'Tata cantó ' + est.truco.paraResponder.nombre + ' → \"Responder truco\"';",
+                  "  else if (!est.juegoIniciado) paso = 'La mano terminó → \"Repartir nueva mano\"';",
+                  "  else if (est.turno === 'jugador') paso = 'Tu turno → \"Jugar carta\" (se usará ' + pm.collectionVariables.get('cartaParaJugar') + ')';",
+                  "  else paso = 'Turno de Tata';",
+                  "  pm.collectionVariables.set('siguientePaso', paso);",
+                  "  console.log('👉 ' + paso + '   | Marcador: vos ' + est.jugador.puntos + ' - Tata ' + est.tata.puntos);",
+                  "}",
+                  "if (json.resultado) console.log('🏁 RESULTADO:', JSON.stringify(json.resultado));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrf}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/partidas/actual/cartas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "partidas",
+                "actual",
+                "cartas"
+              ]
+            },
+            "description": "Tira una carta de tu mano. `carta` es el id: valor + palo, por ejemplo `1espada`, `7oro`, `12copa`. Por defecto usa {{cartaParaJugar}} (la primera carta de tu mano en la última respuesta).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"carta\": \"{{cartaParaJugar}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Cantar truco",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Código HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Responde JSON', () => pm.response.to.be.json);",
+                  "pm.test('ok = true', () => pm.expect(pm.response.json().ok).to.eql(true));",
+                  "// Guarda datos útiles para el próximo paso y muestra qué pasó en la Consola de Postman.",
+                  "const json = pm.response.json();",
+                  "if (json.eventos && json.eventos.length) {",
+                  "  json.eventos.forEach(ev => { if (ev.mensaje) console.log('🃏 ' + ev.mensaje); });",
+                  "  const est = json.eventos[json.eventos.length - 1].estado;",
+                  "  const mano = est.jugador.mano || [];",
+                  "  pm.collectionVariables.set('cartaParaJugar', mano.length ? mano[0].id : '');",
+                  "  let paso;",
+                  "  if (est.partidoTerminado) paso = 'Partido terminado: ' + (est.ganadorPartido === 'jugador' ? '¡ganaste!' : 'ganó Tata') + '. Creá otra partida.';",
+                  "  else if (est.envido.esperandoRespuesta && est.envido.quienCanto === 'tata') paso = 'Tata cantó envido → \"Responder envido\"';",
+                  "  else if (est.truco.esperandoRespuesta && est.truco.quienCanto === 'tata') paso = 'Tata cantó ' + est.truco.paraResponder.nombre + ' → \"Responder truco\"';",
+                  "  else if (!est.juegoIniciado) paso = 'La mano terminó → \"Repartir nueva mano\"';",
+                  "  else if (est.turno === 'jugador') paso = 'Tu turno → \"Jugar carta\" (se usará ' + pm.collectionVariables.get('cartaParaJugar') + ')';",
+                  "  else paso = 'Turno de Tata';",
+                  "  pm.collectionVariables.set('siguientePaso', paso);",
+                  "  console.log('👉 ' + paso + '   | Marcador: vos ' + est.jugador.puntos + ' - Tata ' + est.tata.puntos);",
+                  "}",
+                  "if (json.resultado) console.log('🏁 RESULTADO:', JSON.stringify(json.resultado));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrf}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/partidas/actual/truco",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "partidas",
+                "actual",
+                "truco"
+              ]
+            },
+            "description": "Canta Truco (o Retruco / Vale 4 si te toca subir). No se puede antes de que se tire la primera carta."
+          }
+        },
+        {
+          "name": "Responder truco",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Código HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Responde JSON', () => pm.response.to.be.json);",
+                  "pm.test('ok = true', () => pm.expect(pm.response.json().ok).to.eql(true));",
+                  "// Guarda datos útiles para el próximo paso y muestra qué pasó en la Consola de Postman.",
+                  "const json = pm.response.json();",
+                  "if (json.eventos && json.eventos.length) {",
+                  "  json.eventos.forEach(ev => { if (ev.mensaje) console.log('🃏 ' + ev.mensaje); });",
+                  "  const est = json.eventos[json.eventos.length - 1].estado;",
+                  "  const mano = est.jugador.mano || [];",
+                  "  pm.collectionVariables.set('cartaParaJugar', mano.length ? mano[0].id : '');",
+                  "  let paso;",
+                  "  if (est.partidoTerminado) paso = 'Partido terminado: ' + (est.ganadorPartido === 'jugador' ? '¡ganaste!' : 'ganó Tata') + '. Creá otra partida.';",
+                  "  else if (est.envido.esperandoRespuesta && est.envido.quienCanto === 'tata') paso = 'Tata cantó envido → \"Responder envido\"';",
+                  "  else if (est.truco.esperandoRespuesta && est.truco.quienCanto === 'tata') paso = 'Tata cantó ' + est.truco.paraResponder.nombre + ' → \"Responder truco\"';",
+                  "  else if (!est.juegoIniciado) paso = 'La mano terminó → \"Repartir nueva mano\"';",
+                  "  else if (est.turno === 'jugador') paso = 'Tu turno → \"Jugar carta\" (se usará ' + pm.collectionVariables.get('cartaParaJugar') + ')';",
+                  "  else paso = 'Turno de Tata';",
+                  "  pm.collectionVariables.set('siguientePaso', paso);",
+                  "  console.log('👉 ' + paso + '   | Marcador: vos ' + est.jugador.puntos + ' - Tata ' + est.tata.puntos);",
+                  "}",
+                  "if (json.resultado) console.log('🏁 RESULTADO:', JSON.stringify(json.resultado));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrf}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/partidas/actual/truco/respuesta",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "partidas",
+                "actual",
+                "truco",
+                "respuesta"
+              ]
+            },
+            "description": "Cuando Tata canta: `respuesta` = `aceptar`, `rechazar` o `subir`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"respuesta\": \"aceptar\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Cantar envido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Código HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Responde JSON', () => pm.response.to.be.json);",
+                  "pm.test('ok = true', () => pm.expect(pm.response.json().ok).to.eql(true));",
+                  "// Guarda datos útiles para el próximo paso y muestra qué pasó en la Consola de Postman.",
+                  "const json = pm.response.json();",
+                  "if (json.eventos && json.eventos.length) {",
+                  "  json.eventos.forEach(ev => { if (ev.mensaje) console.log('🃏 ' + ev.mensaje); });",
+                  "  const est = json.eventos[json.eventos.length - 1].estado;",
+                  "  const mano = est.jugador.mano || [];",
+                  "  pm.collectionVariables.set('cartaParaJugar', mano.length ? mano[0].id : '');",
+                  "  let paso;",
+                  "  if (est.partidoTerminado) paso = 'Partido terminado: ' + (est.ganadorPartido === 'jugador' ? '¡ganaste!' : 'ganó Tata') + '. Creá otra partida.';",
+                  "  else if (est.envido.esperandoRespuesta && est.envido.quienCanto === 'tata') paso = 'Tata cantó envido → \"Responder envido\"';",
+                  "  else if (est.truco.esperandoRespuesta && est.truco.quienCanto === 'tata') paso = 'Tata cantó ' + est.truco.paraResponder.nombre + ' → \"Responder truco\"';",
+                  "  else if (!est.juegoIniciado) paso = 'La mano terminó → \"Repartir nueva mano\"';",
+                  "  else if (est.turno === 'jugador') paso = 'Tu turno → \"Jugar carta\" (se usará ' + pm.collectionVariables.get('cartaParaJugar') + ')';",
+                  "  else paso = 'Turno de Tata';",
+                  "  pm.collectionVariables.set('siguientePaso', paso);",
+                  "  console.log('👉 ' + paso + '   | Marcador: vos ' + est.jugador.puntos + ' - Tata ' + est.tata.puntos);",
+                  "}",
+                  "if (json.resultado) console.log('🏁 RESULTADO:', JSON.stringify(json.resultado));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrf}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/partidas/actual/envido",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "partidas",
+                "actual",
+                "envido"
+              ]
+            },
+            "description": "`tipo` = `envido`, `realenvido` o `faltaenvido`. Solo antes de tirar tu primera carta.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"envido\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Responder envido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Código HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Responde JSON', () => pm.response.to.be.json);",
+                  "pm.test('ok = true', () => pm.expect(pm.response.json().ok).to.eql(true));",
+                  "// Guarda datos útiles para el próximo paso y muestra qué pasó en la Consola de Postman.",
+                  "const json = pm.response.json();",
+                  "if (json.eventos && json.eventos.length) {",
+                  "  json.eventos.forEach(ev => { if (ev.mensaje) console.log('🃏 ' + ev.mensaje); });",
+                  "  const est = json.eventos[json.eventos.length - 1].estado;",
+                  "  const mano = est.jugador.mano || [];",
+                  "  pm.collectionVariables.set('cartaParaJugar', mano.length ? mano[0].id : '');",
+                  "  let paso;",
+                  "  if (est.partidoTerminado) paso = 'Partido terminado: ' + (est.ganadorPartido === 'jugador' ? '¡ganaste!' : 'ganó Tata') + '. Creá otra partida.';",
+                  "  else if (est.envido.esperandoRespuesta && est.envido.quienCanto === 'tata') paso = 'Tata cantó envido → \"Responder envido\"';",
+                  "  else if (est.truco.esperandoRespuesta && est.truco.quienCanto === 'tata') paso = 'Tata cantó ' + est.truco.paraResponder.nombre + ' → \"Responder truco\"';",
+                  "  else if (!est.juegoIniciado) paso = 'La mano terminó → \"Repartir nueva mano\"';",
+                  "  else if (est.turno === 'jugador') paso = 'Tu turno → \"Jugar carta\" (se usará ' + pm.collectionVariables.get('cartaParaJugar') + ')';",
+                  "  else paso = 'Turno de Tata';",
+                  "  pm.collectionVariables.set('siguientePaso', paso);",
+                  "  console.log('👉 ' + paso + '   | Marcador: vos ' + est.jugador.puntos + ' - Tata ' + est.tata.puntos);",
+                  "}",
+                  "if (json.resultado) console.log('🏁 RESULTADO:', JSON.stringify(json.resultado));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrf}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/partidas/actual/envido/respuesta",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "partidas",
+                "actual",
+                "envido",
+                "respuesta"
+              ]
+            },
+            "description": "Cuando Tata canta envido: `respuesta` = `quiero`, `noquiero` o subir con `envido`, `realenvido`, `faltaenvido`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"respuesta\": \"quiero\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Irse al mazo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Código HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Responde JSON', () => pm.response.to.be.json);",
+                  "pm.test('ok = true', () => pm.expect(pm.response.json().ok).to.eql(true));",
+                  "// Guarda datos útiles para el próximo paso y muestra qué pasó en la Consola de Postman.",
+                  "const json = pm.response.json();",
+                  "if (json.eventos && json.eventos.length) {",
+                  "  json.eventos.forEach(ev => { if (ev.mensaje) console.log('🃏 ' + ev.mensaje); });",
+                  "  const est = json.eventos[json.eventos.length - 1].estado;",
+                  "  const mano = est.jugador.mano || [];",
+                  "  pm.collectionVariables.set('cartaParaJugar', mano.length ? mano[0].id : '');",
+                  "  let paso;",
+                  "  if (est.partidoTerminado) paso = 'Partido terminado: ' + (est.ganadorPartido === 'jugador' ? '¡ganaste!' : 'ganó Tata') + '. Creá otra partida.';",
+                  "  else if (est.envido.esperandoRespuesta && est.envido.quienCanto === 'tata') paso = 'Tata cantó envido → \"Responder envido\"';",
+                  "  else if (est.truco.esperandoRespuesta && est.truco.quienCanto === 'tata') paso = 'Tata cantó ' + est.truco.paraResponder.nombre + ' → \"Responder truco\"';",
+                  "  else if (!est.juegoIniciado) paso = 'La mano terminó → \"Repartir nueva mano\"';",
+                  "  else if (est.turno === 'jugador') paso = 'Tu turno → \"Jugar carta\" (se usará ' + pm.collectionVariables.get('cartaParaJugar') + ')';",
+                  "  else paso = 'Turno de Tata';",
+                  "  pm.collectionVariables.set('siguientePaso', paso);",
+                  "  console.log('👉 ' + paso + '   | Marcador: vos ' + est.jugador.puntos + ' - Tata ' + est.tata.puntos);",
+                  "}",
+                  "if (json.resultado) console.log('🏁 RESULTADO:', JSON.stringify(json.resultado));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrf}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/partidas/actual/mazo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "partidas",
+                "actual",
+                "mazo"
+              ]
+            },
+            "description": "Abandona la mano actual: Tata se lleva los puntos que estaban en juego."
+          }
+        },
+        {
+          "name": "Repartir nueva mano",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Código HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Responde JSON', () => pm.response.to.be.json);",
+                  "pm.test('ok = true', () => pm.expect(pm.response.json().ok).to.eql(true));",
+                  "// Guarda datos útiles para el próximo paso y muestra qué pasó en la Consola de Postman.",
+                  "const json = pm.response.json();",
+                  "if (json.eventos && json.eventos.length) {",
+                  "  json.eventos.forEach(ev => { if (ev.mensaje) console.log('🃏 ' + ev.mensaje); });",
+                  "  const est = json.eventos[json.eventos.length - 1].estado;",
+                  "  const mano = est.jugador.mano || [];",
+                  "  pm.collectionVariables.set('cartaParaJugar', mano.length ? mano[0].id : '');",
+                  "  let paso;",
+                  "  if (est.partidoTerminado) paso = 'Partido terminado: ' + (est.ganadorPartido === 'jugador' ? '¡ganaste!' : 'ganó Tata') + '. Creá otra partida.';",
+                  "  else if (est.envido.esperandoRespuesta && est.envido.quienCanto === 'tata') paso = 'Tata cantó envido → \"Responder envido\"';",
+                  "  else if (est.truco.esperandoRespuesta && est.truco.quienCanto === 'tata') paso = 'Tata cantó ' + est.truco.paraResponder.nombre + ' → \"Responder truco\"';",
+                  "  else if (!est.juegoIniciado) paso = 'La mano terminó → \"Repartir nueva mano\"';",
+                  "  else if (est.turno === 'jugador') paso = 'Tu turno → \"Jugar carta\" (se usará ' + pm.collectionVariables.get('cartaParaJugar') + ')';",
+                  "  else paso = 'Turno de Tata';",
+                  "  pm.collectionVariables.set('siguientePaso', paso);",
+                  "  console.log('👉 ' + paso + '   | Marcador: vos ' + est.jugador.puntos + ' - Tata ' + est.tata.puntos);",
+                  "}",
+                  "if (json.resultado) console.log('🏁 RESULTADO:', JSON.stringify(json.resultado));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrf}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/partidas/actual/manos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "partidas",
+                "actual",
+                "manos"
+              ]
+            },
+            "description": "Reparte la siguiente mano cuando terminó la anterior."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2 · Ranking",
+      "item": [
+        {
+          "name": "Ver tabla de puntajes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Código HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Responde JSON', () => pm.response.to.be.json);",
+                  "pm.test('ok = true', () => pm.expect(pm.response.json().ok).to.eql(true));",
+                  "const y = pm.response.json().yo; console.log('Vos: ' + y.puntos + ' pts, posición ' + y.posicion);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ranking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ranking"
+              ]
+            },
+            "description": "Top 50 de jugadores y tus estadísticas (puntos, posición, victorias, derrotas)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "3 · Pruebas de errores",
+      "description": "Estas peticiones TIENEN que fallar. Sirven para comprobar que el servidor se defiende bien.",
+      "item": [
+        {
+          "name": "Sin token CSRF (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Código HTTP 403', () => pm.response.to.have.status(403));",
+                  "pm.test('Responde JSON', () => pm.response.to.be.json);",
+                  "pm.test('ok = false y trae mensaje de error', () => { const j = pm.response.json(); pm.expect(j.ok).to.eql(false); pm.expect(j.error).to.be.a('string'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/partidas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "partidas"
+              ]
+            },
+            "description": "Igual que crear partida pero sin la cabecera X-CSRF-Token.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"objetivo\": 15\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Objetivo inválido (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Código HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('Responde JSON', () => pm.response.to.be.json);",
+                  "pm.test('ok = false y trae mensaje de error', () => { const j = pm.response.json(); pm.expect(j.ok).to.eql(false); pm.expect(j.error).to.be.a('string'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrf}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/partidas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "partidas"
+              ]
+            },
+            "description": "Solo se aceptan 15 o 30.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"objetivo\": 99\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Carta que no tenés (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Código HTTP 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Responde JSON', () => pm.response.to.be.json);",
+                  "pm.test('ok = false y trae mensaje de error', () => { const j = pm.response.json(); pm.expect(j.ok).to.eql(false); pm.expect(j.error).to.be.a('string'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrf}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/partidas/actual/cartas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "partidas",
+                "actual",
+                "cartas"
+              ]
+            },
+            "description": "El motor rechaza cartas que no están en tu mano (o jugar fuera de turno). Necesita una partida en curso.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"carta\": \"1espada_falsa\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Respuesta inválida (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Código HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('Responde JSON', () => pm.response.to.be.json);",
+                  "pm.test('ok = false y trae mensaje de error', () => { const j = pm.response.json(); pm.expect(j.ok).to.eql(false); pm.expect(j.error).to.be.a('string'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrf}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/partidas/actual/truco/respuesta",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "partidas",
+                "actual",
+                "truco",
+                "respuesta"
+              ]
+            },
+            "description": "Valor no permitido.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"respuesta\": \"tal vez\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Método equivocado (405)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Código HTTP 405', () => pm.response.to.have.status(405));",
+                  "pm.test('Responde JSON', () => pm.response.to.be.json);",
+                  "pm.test('ok = false y trae mensaje de error', () => { const j = pm.response.json(); pm.expect(j.ok).to.eql(false); pm.expect(j.error).to.be.a('string'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ranking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ranking"
+              ]
+            },
+            "description": "El ranking solo se consulta con GET."
+          }
+        },
+        {
+          "name": "Ruta inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Código HTTP 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Responde JSON', () => pm.response.to.be.json);",
+                  "pm.test('ok = false y trae mensaje de error', () => { const j = pm.response.json(); pm.expect(j.ok).to.eql(false); pm.expect(j.error).to.be.a('string'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/no-existe",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "no-existe"
+              ]
+            },
+            "description": "Cualquier ruta que no está en routes/api.php."
+          }
+        },
+        {
+          "name": "Contraseña incorrecta (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Código HTTP 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Responde JSON', () => pm.response.to.be.json);",
+                  "pm.test('ok = false y trae mensaje de error', () => { const j = pm.response.json(); pm.expect(j.ok).to.eql(false); pm.expect(j.error).to.be.a('string'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Cuenta como intento fallido (5 seguidos bloquean 15 minutos).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuario\": \"{{usuario}}\",\n  \"password\": \"incorrecta\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4 · Terminar",
+      "item": [
+        {
+          "name": "Abandonar partida",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Código HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Responde JSON', () => pm.response.to.be.json);",
+                  "pm.test('ok = true', () => pm.expect(pm.response.json().ok).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrf}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/partidas/actual",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "partidas",
+                "actual"
+              ]
+            },
+            "description": "Da por abandonada la partida en curso. No suma puntos."
+          }
+        },
+        {
+          "name": "Cerrar sesión",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Código HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Responde JSON', () => pm.response.to.be.json);",
+                  "pm.test('ok = true', () => pm.expect(pm.response.json().ok).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrf}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Cierra la sesión. Necesita X-CSRF-Token. Después de esto las peticiones con sesión responden 401."
+          }
+        },
+        {
+          "name": "Ranking sin sesión (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Código HTTP 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Responde JSON', () => pm.response.to.be.json);",
+                  "pm.test('ok = false y trae mensaje de error', () => { const j = pm.response.json(); pm.expect(j.ok).to.eql(false); pm.expect(j.error).to.be.a('string'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ranking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ranking"
+              ]
+            },
+            "description": "Comprueba que sin sesión no se puede consultar."
+          }
+        }
+      ]
+    }
+  ]
+}
